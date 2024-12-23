@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "914929799860",
+    "project_id": "shop-nest-278",
+    "storage_bucket": "shop-nest-278.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:914929799860:android:a69e9028f5d831498cfde1",
+        "android_client_info": {
+          "package_name": "com.cravecurve"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "914929799860-oq73rf23j1g4b9aphp4uv5k0r88ga5v5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBy8_Xl0JbI3lOEd9DeTqbhIId17ypX2gs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "914929799860-oq73rf23j1g4b9aphp4uv5k0r88ga5v5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:914929799860:android:61d70a7caba183e88cfde1",
+        "android_client_info": {
+          "package_name": "com.ecommmerce"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "914929799860-oq73rf23j1g4b9aphp4uv5k0r88ga5v5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBy8_Xl0JbI3lOEd9DeTqbhIId17ypX2gs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "914929799860-oq73rf23j1g4b9aphp4uv5k0r88ga5v5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
