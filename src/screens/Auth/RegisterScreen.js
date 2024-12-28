@@ -9,8 +9,7 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import axios from 'axios';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 
@@ -28,17 +27,19 @@ const RegisterScreen = ({ navigation }) => {
       .required('Confirm password is required'),
   });
 
-  // Handle User Registration
+  // Handle User Registration with MongoDB
   const handleRegister = async (values) => {
     const { email, password } = values;
     setLoading(true);
     try {
-      const userCredential = await auth().createUserWithEmailAndPassword(email, password);
-      // Store role in Firestore after successful registration
-      await firestore().collection('users').doc(userCredential.user.uid).set({
+      // Send the registration data to the backend (MongoDB)
+      const response = await axios.post('http://192.168.100.16:5000/api/register', {
         email,
+        password,
         role,
       });
+
+      console.log(response.data.message); // Registration success message
 
       // Set success state to true to display success message
       setRegistrationSuccess(true);
@@ -47,8 +48,13 @@ const RegisterScreen = ({ navigation }) => {
       setTimeout(() => {
         navigation.navigate('LoginScreen');
       }, 2000); // Wait for 2 seconds before navigating
-    } catch (error) {
-      console.error(error.message);
+    }catch (error) {
+        console.error('Full error:', {
+          message: error.message,
+          request: error.request,
+          response: error.response,
+          config: error.config
+        });
     }
     setLoading(false);
   };
@@ -112,25 +118,28 @@ const RegisterScreen = ({ navigation }) => {
               <Text style={styles.label}>Select your role:</Text>
               <View style={styles.roleContainer}>
                 <TouchableOpacity
-                  style={[styles.radioButton, role === 'Customer' && styles.selectedRadio]}
-                  onPress={() => setRole('Customer')}
+                  style={[styles.radioButton, role === 'customer' && styles.selectedRadio]}
+                  onPress={() => setRole('customer')}
                 >
                   <Text style={styles.radioText}>Customer</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.radioButton, role === 'Restaurant' && styles.selectedRadio]}
-                  onPress={() => setRole('Restaurant')}
+                  style={[styles.radioButton, role === 'manager' && styles.selectedRadio]}
+                  onPress={() => setRole('manager')}
                 >
-                  <Text style={styles.radioText}>Restaurant</Text>
+                  <Text style={styles.radioText}>Manager</Text>
                 </TouchableOpacity>
               </View>
               {!role && <Text style={styles.errorText}>Please select a role</Text>}
 
               {/* Loading Indicator or Register Button */}
               {loading ? (
-                <ActivityIndicator size="large" color="#fff" />
+                <ActivityIndicator size="large" color="#000" />
               ) : (
-                <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+                <TouchableOpacity
+                  style={[styles.button, { backgroundColor: role === 'Customer' ? '#4CAF50' : '#FF6347' }]} // Button color based on role
+                  onPress={handleSubmit}
+                >
                   <Text style={styles.buttonText}>Register</Text>
                 </TouchableOpacity>
               )}
@@ -157,98 +166,97 @@ const RegisterScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff', // White background
-    paddingHorizontal: 20,
-    paddingTop: 50,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   logo: {
-    width: 100,
-    height: 100,
-    alignSelf: 'center',
+    width: 120,
+    height: 120,
     marginBottom: 20,
   },
   restaurantName: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#4CAF50', // Green color for brand name
-    textAlign: 'center',
-    marginBottom: 20,
+    color: '#333',
+    marginBottom: 40,
   },
   input: {
+    width: '100%',
     height: 50,
-    borderColor: '#4CAF50', // Green border for inputs
-    borderWidth: 1,
+    backgroundColor: '#f5f5f5',
     borderRadius: 10,
-    marginBottom: 15,
     paddingHorizontal: 15,
-    backgroundColor: '#f1f1f1', // Light grey background for inputs
-    color: '#333', // Dark text color for inputs
+    marginBottom: 15,
     fontSize: 16,
+    color: '#333',
   },
   errorText: {
     color: 'red',
-    fontSize: 12,
+    fontSize: 14,
     marginBottom: 10,
   },
-  button: {
-    backgroundColor: '#4CAF50', // Green button
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#fff', // White text on the button
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  loginText: {
-    color: '#4CAF50', // Green color
-    textAlign: 'center',
-    marginTop: 15,
-    fontSize: 16,
-  },
   label: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#333',
-    marginTop: 20,
+    marginVertical: 10,
   },
   roleContainer: {
     flexDirection: 'row',
-    marginVertical: 10,
     justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 20,
   },
   radioButton: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
-    borderWidth: 1,
-    borderColor: '#4CAF50', // Green border for radio buttons
-    borderRadius: 50,
-    marginHorizontal: 10,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 25,
+    width: '48%',
+    justifyContent: 'center',
   },
   selectedRadio: {
-    backgroundColor: '#4CAF50', // Green background for selected radio button
+    backgroundColor: '#4CAF50',
   },
   radioText: {
-    color: '#000', // White text color
     fontSize: 16,
+    color: '#333',
   },
-  successMessage: {
-    backgroundColor: '#fff',
-    padding: 15,
-    marginTop: 20,
-    borderRadius: 10,
+  button: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#4CAF50', // Default green button color
+    justifyContent: 'center',
     alignItems: 'center',
-    borderColor: '#4CAF50',
-    borderWidth: 1,
+    borderRadius: 25,
+    marginBottom: 20,
   },
-  successText: {
-    color: '#4CAF50', // Green text
+  buttonText: {
+    color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
   },
+  loginText: {
+    color: '#333',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  successMessage: {
+    marginTop: 20,
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 5,
+    width: '100%',
+    alignItems: 'center',
+  },
+  successText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
+
 
 export default RegisterScreen;

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Image, ScrollView } from 'react-native';
-import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore'; // Import firestore for checking user role
+import axios from 'axios';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
@@ -18,27 +18,48 @@ const LoginScreen = ({ navigation }) => {
   const handleLogin = async (values) => {
     const { email, password } = values;
     setLoading(true);
+
     try {
-      await auth().signInWithEmailAndPassword(email, password);
-      const user = auth().currentUser;
+      const response = await axios.post('http://192.168.100.16:5000/api/login', {
+        email,
+        password,
+      });
 
-      // Fetch user role from Firestore (assuming role is stored in Firestore under users collection)
-      const userDoc = await firestore().collection('users').doc(user.uid).get();
-      const userRole = userDoc.data().role;
+      // Log the response to see its structure
+      console.log('Response:', response.data);
 
-      // Navigate based on the role
-      if (userRole === 'Restaurant') {
-        navigation.navigate('SellerDashboardScreen'); // Navigate to Seller Dashboard
+      // Correctly destructure the response
+      const { token, user } = response.data;
+
+      // Get role from user object
+      const { role } = user;
+
+      // Store the token
+      await AsyncStorage.setItem('authToken', token);
+
+      // Navigate based on role
+      if (role === 'manager') {
+        navigation.navigate('SellerDashboardScreen');
+        Alert.alert('Login Successful', 'Welcome Manager!');
+      } else if (role === 'customer') {
+        navigation.navigate('BuyerDashboard');
+        Alert.alert('Login Successful', 'Welcome Customer!');
       } else {
-        navigation.navigate('AllProducts'); // Navigate to Buyer Dashboard
+        Alert.alert('Error', 'User role not recognized.');
       }
-
-      Alert.alert('Login Successful', 'You are now logged in!');
     } catch (error) {
-      console.error(error.message);
-      Alert.alert('Login Failed', error.message);
+      // Detailed error handling
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        'Login failed. Please try again.';
+
+      console.error('Login error:', errorMessage);
+      Alert.alert('Login Failed', errorMessage);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   // Handle Forgot Password
@@ -47,8 +68,8 @@ const LoginScreen = ({ navigation }) => {
       Alert.alert('Error', 'Please enter your email address.');
       return;
     }
-    auth()
-      .sendPasswordResetEmail(email)
+    axios
+      .post('http://yourserverurl:5000/forgot-password', { email })
       .then(() => {
         Alert.alert('Password Reset', 'Password reset email sent successfully.');
       })
@@ -69,7 +90,7 @@ const LoginScreen = ({ navigation }) => {
         <Formik
           initialValues={{ email: '', password: '' }}
           validationSchema={validationSchema}
-          onSubmit={(values) => handleLogin(values)}
+          onSubmit={handleLogin}
         >
           {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
             <>
@@ -123,7 +144,7 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff', // White background
+    backgroundColor: '#fff',
     paddingHorizontal: 20,
     paddingTop: 50,
   },
@@ -136,19 +157,19 @@ const styles = StyleSheet.create({
   restaurantName: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#4CAF50', // Green color for brand name
+    color: '#4CAF50',
     textAlign: 'center',
     marginBottom: 20,
   },
   input: {
     height: 50,
-    borderColor: '#4CAF50', // Green border for inputs
+    borderColor: '#4CAF50',
     borderWidth: 1,
     borderRadius: 10,
     marginBottom: 15,
     paddingHorizontal: 15,
-    backgroundColor: '#f1f1f1', // Light grey background for inputs
-    color: '#333', // Dark text color for inputs
+    backgroundColor: '#f1f1f1',
+    color: '#333',
     fontSize: 16,
   },
   errorText: {
@@ -157,25 +178,25 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   button: {
-    backgroundColor: '#4CAF50', // Green button
+    backgroundColor: '#4CAF50',
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 10,
   },
   buttonText: {
-    color: '#fff', // White text on the button
+    color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
   },
   forgotPasswordText: {
-    color: '#4CAF50', // Green color for forgot password link
+    color: '#4CAF50',
     textAlign: 'center',
     marginTop: 15,
     fontSize: 16,
   },
   registerText: {
-    color: '#4CAF50', // Green color for register link
+    color: '#4CAF50',
     textAlign: 'center',
     marginTop: 15,
     fontSize: 16,
